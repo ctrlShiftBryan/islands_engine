@@ -2,7 +2,7 @@ defmodule IslandsEngineTest.Rules do
   use ExUnit.Case
   alias IslandsEngine.{Rules}
 
-  describe "Rules" do
+  describe "Rules init and set" do
     test "can init & add player" do
       rules = Rules.new()
       assert rules.state == :initialized
@@ -52,13 +52,13 @@ defmodule IslandsEngineTest.Rules do
       assert :error == Rules.check(rules, {:position_islands, :player1})
       assert :error == Rules.check(rules, {:position_islands, :player2})
     end
+  end
 
+  describe "Rules payer turns" do
     test "player 2 can take turn on players 1's turn" do
       # brand new game
       rules = Rules.new()
-
       rules = %{rules | state: :player1_turn}
-
       assert :error == Rules.check(rules, {:guess_coordinate, :player2})
     end
 
@@ -75,6 +75,16 @@ defmodule IslandsEngineTest.Rules do
       rules = %{rules | state: :player1_turn}
       assert {:ok, rules} = Rules.check(rules, {:win_check, :no_win})
       assert rules.state == :player1_turn
+
+      assert {:ok, rules} = Rules.check(rules, {:win_check, :win})
+      assert rules.state == :game_over
+    end
+
+    test "player 2 can win" do
+      rules = Rules.new()
+      rules = %{rules | state: :player2_turn}
+      assert {:ok, rules} = Rules.check(rules, {:win_check, :no_win})
+      assert rules.state == :player2_turn
 
       assert {:ok, rules} = Rules.check(rules, {:win_check, :win})
       assert rules.state == :game_over

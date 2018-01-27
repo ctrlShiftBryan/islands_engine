@@ -90,5 +90,49 @@ defmodule IslandsEngineTest.Rules do
       assert rules.state == :game_over
     end
 
+    test "can get to game over" do
+      # get a new rules struct, and make sure it’s in the :initialized state
+      rules = Rules.new()
+      assert rules.state == :initialized
+
+      # adding a player and make sure that we transition to :players_set
+      {:ok, rules} = Rules.check(rules, :add_player)
+      assert rules.state == :players_set
+
+      # Each player should be able to move an island and the state should still be :players_set:
+      {:ok, rules} = Rules.check(rules, {:position_islands, :player1})
+      assert rules.state == :players_set
+
+      {:ok, rules} = Rules.check(rules, {:position_islands, :player2})
+      assert rules.state == :players_set
+
+      # When one player sets her islands, she should no longer be able to position them,
+      # but the other player still should be able to
+      {:ok, rules} = Rules.check(rules, {:set_islands, :player1})
+      assert rules.state == :players_set
+      assert Rules.check(rules, {:position_islands, :player1}) == :error
+      {:ok, rules} = Rules.check(rules, {:position_islands, :player2})
+      assert rules.state == :players_set
+      {:ok, rules} = Rules.check(rules, {:set_islands, :player2})
+      assert rules.state == :player1_turn
+
+      # Now the players should be able to alternate guessing coordinates, beginning
+      # with :player1. If :player2 tries to guess first, that should be an error. After that,
+      # the players will alternate guesses.
+      assert Rules.check(rules, {:guess_coordinate, :player2}) == :error
+      {:ok, rules} = Rules.check(rules, {:guess_coordinate, :player1})
+      assert rules.state == :player2_turn
+      assert Rules.check(rules, {:guess_coordinate, :player1}) == :error
+      {:ok, rules} = Rules.check(rules, {:guess_coordinate, :player2})
+      assert rules.state == :player1_turn
+
+      # Any guess that doesn’t result in a win should not transition the state. But
+      # when somebody does win, the state should become :game_over:
+      {:ok, rules} = Rules.check(rules, {:win_check, :no_win})
+      assert rules.state == :player1_turn
+      {:ok, rules} = Rules.check(rules, {:win_check, :win})
+      assert rules.state == :game_over
+
+    end
   end
 end

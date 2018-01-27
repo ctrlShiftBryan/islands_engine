@@ -23,7 +23,7 @@ defmodule IslandsEngine.Island do
 
   def forested?(island), do: MapSet.equal?(island.coordinates, island.hit_coordinates)
 
-  def types(), do: [:atoll, :dot, :l_shape, :s_shape, :square]
+  def types, do: [:atoll, :dot, :l_shape, :s_shape, :square]
 
   defp offsets(:square), do: [{0, 0}, {0, 1}, {1, 0}, {1, 1}]
   defp offsets(:atoll), do: [{0, 0}, {0, 1}, {1, 1}, {2, 0}, {2, 1}]

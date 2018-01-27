@@ -21,6 +21,9 @@ defmodule IslandsEngine.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:mix_test_watch, "~> 0.5", only: :dev, runtime: false}]
+    [
+      {:mix_test_watch, "~> 0.5", only: :dev, runtime: false},
+      {:credo, "~> 0.9.0-rc1", only: [:dev, :test], runtime: false}
+    ]
   end
 end

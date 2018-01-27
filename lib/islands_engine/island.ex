@@ -32,4 +32,7 @@ defmodule IslandsEngine.Island do
         {:halt, {:error, :invalid_coordinate}}
     end
   end
+
+  def overlaps?(existing_island, new_island),
+    do: not MapSet.disjoint?(existing_island.coordinates, new_island.coordinates)
 end

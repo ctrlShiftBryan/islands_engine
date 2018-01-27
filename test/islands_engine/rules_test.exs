@@ -89,5 +89,6 @@ defmodule IslandsEngineTest.Rules do
       assert {:ok, rules} = Rules.check(rules, {:win_check, :win})
       assert rules.state == :game_over
     end
+
   end
 end

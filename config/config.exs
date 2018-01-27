@@ -2,8 +2,13 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-if Mix.env == :dev do
+if Mix.env() == :dev do
   config :mix_test_watch,
+    tasks: [
+      "test --stale",
+      "credo",
+      "coveralls"
+    ],
     clear: true
 end
 

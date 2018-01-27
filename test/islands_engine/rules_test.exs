@@ -34,7 +34,6 @@ defmodule IslandsEngineTest.Rules do
       assert rules.player2 == :islands_not_set
       assert rules.state == :players_set
 
-
       # setting again doesn't change anything
       {:ok, rules} = Rules.check(rules, {:set_islands, :player1})
 
@@ -52,6 +51,33 @@ defmodule IslandsEngineTest.Rules do
       # setting now returns an error
       assert :error == Rules.check(rules, {:position_islands, :player1})
       assert :error == Rules.check(rules, {:position_islands, :player2})
+    end
+
+    test "player 2 can take turn on players 1's turn" do
+      # brand new game
+      rules = Rules.new()
+
+      rules = %{rules | state: :player1_turn}
+
+      assert :error == Rules.check(rules, {:guess_coordinate, :player2})
+    end
+
+    test "player 1 can go and then its player 2's turn" do
+      # brand new game
+      rules = Rules.new()
+      rules = %{rules | state: :player1_turn}
+      assert {:ok, rules} = Rules.check(rules, {:guess_coordinate, :player1})
+      assert rules.state == :player2_turn
+    end
+
+    test "player 1 can win" do
+      rules = Rules.new()
+      rules = %{rules | state: :player1_turn}
+      assert {:ok, rules} = Rules.check(rules, {:win_check, :no_win})
+      assert rules.state == :player1_turn
+
+      assert {:ok, rules} = Rules.check(rules, {:win_check, :win})
+      assert rules.state == :game_over
     end
   end
 end

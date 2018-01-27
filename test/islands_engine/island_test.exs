@@ -1,6 +1,5 @@
 defmodule IslandsEngineTest.Islands do
   use ExUnit.Case
-  doctest IslandsEngine
   alias IslandsEngine.{Coordinate, Island}
 
   describe "Coordinate.new/2" do
@@ -56,6 +55,37 @@ defmodule IslandsEngineTest.Islands do
       assert Island.overlaps?(square, dot)
       refute Island.overlaps?(square, l_shape)
       refute Island.overlaps?(dot, l_shape)
+    end
+  end
+
+  describe "Islands.guess/2" do
+    test "" do
+      {:ok, dot_coordinate} = Coordinate.new(4, 4)
+      {:ok, dot} = Island.new(:dot, dot_coordinate)
+
+      assert dot == %Island{
+               coordinates: MapSet.new([dot_coordinate]),
+               hit_coordinates: MapSet.new()
+             }
+
+      {:ok, coordinate} = Coordinate.new(2, 2)
+
+      assert :miss == Island.guess(dot, coordinate)
+
+      {:ok, new_coordinate} = Coordinate.new(4, 4)
+
+      guess = Island.guess(dot, new_coordinate)
+
+      assert guess ==
+               {:hit,
+                %Island{
+                  coordinates: MapSet.new([dot_coordinate]),
+                  hit_coordinates: MapSet.new([new_coordinate])
+                }}
+
+      {:hit, dot} = guess
+
+      assert Island.forested?(dot)
     end
   end
 end

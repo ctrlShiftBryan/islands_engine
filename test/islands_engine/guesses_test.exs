@@ -1,6 +1,5 @@
 defmodule IslandsEngineTest.Guesses do
   use ExUnit.Case
-  doctest IslandsEngine
   alias IslandsEngine.{Coordinate, Guesses}
 
   describe "Guesses" do

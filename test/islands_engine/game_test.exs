@@ -1,6 +1,6 @@
 defmodule IslandsEngineTest.Game do
   use ExUnit.Case
-  alias IslandsEngine.{Game, Rules}
+  alias IslandsEngine.{Game, Rules, Coordinate}
 
   describe "Game" do
     test "can start with first player name" do
@@ -32,10 +32,10 @@ defmodule IslandsEngineTest.Game do
                  square: %IslandsEngine.Island{
                    coordinates:
                      MapSet.new([
-                       %IslandsEngine.Coordinate{col: 1, row: 1},
-                       %IslandsEngine.Coordinate{col: 1, row: 2},
-                       %IslandsEngine.Coordinate{col: 2, row: 1},
-                       %IslandsEngine.Coordinate{col: 2, row: 2}
+                       %Coordinate{col: 1, row: 1},
+                       %Coordinate{col: 1, row: 2},
+                       %Coordinate{col: 2, row: 1},
+                       %Coordinate{col: 2, row: 2}
                      ]),
                    hit_coordinates: MapSet.new([])
                  }
@@ -62,5 +62,27 @@ defmodule IslandsEngineTest.Game do
       # make sure we can't position an island still
       assert Game.position_island(game, :player1, :dot, 5, 5) == :error
     end
+
+    test "Can start, position and set islands" do
+      {:ok, game} = Game.start_link("Dino")
+      Game.add_player(game, "Pebbles")
+
+      assert Game.set_islands(game, :player1) == {:error, :not_all_islands_positioned}
+
+      Game.position_island(game, :player1, :atoll, 1, 1)
+      Game.position_island(game, :player1, :dot, 1, 4)
+      Game.position_island(game, :player1, :l_shape, 1, 5)
+      Game.position_island(game, :player1, :s_shape, 5, 1)
+      Game.position_island(game, :player1, :square, 5, 5)
+
+      assert {:ok, _} = Game.set_islands(game, :player1)
+
+      state_data = :sys.get_state(game)
+
+      assert state_data.rules.player1 == :islands_set
+
+      assert state_data.rules.state == :players_set
+    end
   end
+
 end

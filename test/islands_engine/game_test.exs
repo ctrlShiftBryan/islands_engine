@@ -114,5 +114,12 @@ defmodule IslandsEngineTest.Game do
       # If :player2 guesses the single coordinate in :dot island, he should win the game
       assert Game.guess_coordinate(game, :player2, 1, 1) == {:hit, :dot, :win}
     end
+
+    test "via_tuple" do
+      via = Game.via_tuple("Lena")
+      GenServer.start_link(Game, "Lena", name: via)
+      :sys.get_state(via)
+      assert {:error, {:already_started, _}} = GenServer.start_link(Game, "Lena", name: via)
+    end
   end
 end

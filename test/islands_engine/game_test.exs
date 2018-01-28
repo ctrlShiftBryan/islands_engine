@@ -23,6 +23,8 @@ defmodule IslandsEngineTest.Game do
       state_data = :sys.get_state(game)
       assert state_data.rules.state == :players_set
 
+      # adding a 3rd player should error
+      assert Game.add_player(game, "Wilma") == :error
       # have player1 position a square island beginning at row 1 and column 1
       Game.position_island(game, :player1, :square, 1, 1)
       state_data = :sys.get_state(game)
@@ -53,9 +55,10 @@ defmodule IslandsEngineTest.Game do
                {:error, :invalid_coordinate}
 
       # set game process to player1_turn
-      state_data = :sys.replace_state(game, fn state_data ->
-        %{state_data | rules: %Rules{state: :player1_turn}}
-      end)
+      state_data =
+        :sys.replace_state(game, fn state_data ->
+          %{state_data | rules: %Rules{state: :player1_turn}}
+        end)
 
       assert state_data.rules.state == :player1_turn
 
@@ -83,6 +86,33 @@ defmodule IslandsEngineTest.Game do
 
       assert state_data.rules.state == :players_set
     end
-  end
 
+    test "Can guess" do
+      {:ok, game} = Game.start_link("Miles")
+
+      # If we try guessing a coordinate right away, Rules.check/2 should return :error
+      assert Game.guess_coordinate(game, :player1, 1, 1) == :error
+
+      Game.add_player(game, "Trane")
+      Game.position_island(game, :player1, :dot, 1, 1)
+      Game.position_island(game, :player2, :square, 1, 1)
+
+      # skip to :player1_turn
+      state_data = :sys.get_state(game)
+      state_data = :sys.replace_state(game, &%{&1 | rules: %Rules{state: :player1_turn}})
+      assert state_data.rules.state == :player1_turn
+
+      # If :player1 tries to guess invalid, the rules should catch that
+      assert Game.guess_coordinate(game, :player1, 13, 1) == {:error, :invalid_coordinate}
+
+      # :player1 guess a wrong coordinate.
+      assert Game.guess_coordinate(game, :player1, 5, 5) == {:miss, :none, :no_win}
+
+      # If :player1 tries to guess again, the rules should catch that
+      assert Game.guess_coordinate(game, :player1, 3, 1) == :error
+
+      # If :player2 guesses the single coordinate in :dot island, he should win the game
+      assert Game.guess_coordinate(game, :player2, 1, 1) == {:hit, :dot, :win}
+    end
+  end
 end

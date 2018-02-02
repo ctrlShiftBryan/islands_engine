@@ -98,7 +98,6 @@ defmodule IslandsEngineTest.Game do
       Game.position_island(game, :player2, :square, 1, 1)
 
       # skip to :player1_turn
-      state_data = :sys.get_state(game)
       state_data = :sys.replace_state(game, &%{&1 | rules: %Rules{state: :player1_turn}})
       assert state_data.rules.state == :player1_turn
 

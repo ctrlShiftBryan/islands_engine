@@ -15,9 +15,8 @@ defmodule IslandsEngine.Game do
 
   @timeout 15_000 * 60 * 60 * 24
   def init(name) do
-    player1 = %{name: name, board: Board.new(), guesses: Guesses.new()}
-    player2 = %{name: nil, board: Board.new(), guesses: Guesses.new()}
-    {:ok, %{player1: player1, player2: player2, rules: %Rules{}}, @timeout}
+    send(self(), {:set_state, name})
+    {:ok, fresh_state(name)}
   end
 
   def add_player(game, name) when is_binary(name), do: GenServer.call(game, {:add_player, name})
@@ -31,6 +30,24 @@ defmodule IslandsEngine.Game do
 
   def set_islands(game, player) when player in @players,
     do: GenServer.call(game, {:set_islands, player})
+
+  def terminate({:shutdown, :timeout}, state_data) do
+    :ets.delete(:game_state, state_data.player1.name)
+    :ok
+  end
+
+  def terminate(_reason, _state), do: :ok
+
+  def handle_info({:set_state, name}, _state_data) do
+    state_data =
+      case :ets.lookup(:game_state, name) do
+        [] -> fresh_state(name)
+        [{_key, state}] -> state
+      end
+
+    :ets.insert(:game_state, {name, state_data})
+    {:noreply, state_data, @timeout}
+  end
 
   def handle_info(:timeout, state_data) do
     {:stop, {:shutdown, :timeout}, state_data}
@@ -109,6 +126,12 @@ defmodule IslandsEngine.Game do
     end
   end
 
+  defp fresh_state(name) do
+    player1 = %{name: name, board: Board.new(), guesses: Guesses.new()}
+    player2 = %{name: nil, board: Board.new(), guesses: Guesses.new()}
+    %{player1: player1, player2: player2, rules: %Rules{}}
+  end
+
   defp player_board(state_data, player), do: Map.get(state_data, player).board
 
   defp update_board(state_data, player, board),
@@ -118,7 +141,10 @@ defmodule IslandsEngine.Game do
 
   defp update_rules(state_data, rules), do: %{state_data | rules: rules}
 
-  defp reply_success(state_data, reply), do: {:reply, reply, state_data, @timeout}
+  defp reply_success(state_data, reply) do
+    :ets.insert(:game_state, {state_data.player1.name, state_data})
+    {:reply, reply, state_data, @timeout}
+  end
 
   defp opponent(:player1), do: :player2
   defp opponent(:player2), do: :player1

@@ -10,6 +10,8 @@ defmodule IslandsEngineTest.Game do
     end
 
     test "can name 2nd player" do
+      # raise "sometimes this fails"
+      :timer.sleep(100)
       {:ok, game} = Game.start_link("Frank")
       Game.add_player(game, "Dweezil")
       state_data = :sys.get_state(game)

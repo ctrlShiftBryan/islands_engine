@@ -1,6 +1,6 @@
 defmodule IslandsEngine.Game do
   use GenServer,
-    start: {__MODULE__, :start_link, []},
+    # start: {__MODULE__, :start_link, []},
     restart: :transient,
     type: :worker,
     shutdown: 5000
